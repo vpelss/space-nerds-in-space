@@ -25915,7 +25915,7 @@ static int add_new_player(struct game_client *c)
 		bridgelist[nbridges].current_displaymode = DISPLAYMODE_MAINSCREEN;
 		bridgelist[nbridges].verified = BRIDGE_UNVERIFIED;
 		bridgelist[nbridges].requested_verification = 0;
-		bridgelist[nbridges].requested_creation = 1; //vinman
+		bridgelist[nbridges].requested_creation = !!app.new_ship;
 		bridgelist[nbridges].nclients = 1;
 		bridgelist[nbridges].selected_waypoint = -1;
 		bridgelist[nbridges].nwaypoints = 0;
@@ -25941,28 +25941,18 @@ static int add_new_player(struct game_client *c)
 		nbridges++;
 		schedule_callback(event_callback, &callback_schedule,
 				"player-respawn-event", (double) c->shipid);
-	} 	else { /* join existing ship */
+	} else if (c->bridge != -1 && !app.new_ship) { /* join existing ship */
 		fprintf(stderr, "%s: join existing ship\n", logprefix());
 		c->shipid = bridgelist[c->bridge].shipid;
 		c->ship_index = lookup_by_id(c->shipid);
 		bridgelist[c->bridge].nclients++;
-	}
-	
-	//vinman see above
-	/*
-	else if (c->bridge != -1 && !app.new_ship) { //
-		fprintf(stderr, "%s: join existing ship\n", logprefix());
-		c->shipid = bridgelist[c->bridge].shipid;
-		c->ship_index = lookup_by_id(c->shipid);
-		bridgelist[c->bridge].nclients++;
-	} else if (c->bridge != -1 && app.new_ship) { // ship already exists, can't create
+	} else if (c->bridge != -1 && app.new_ship) { /* ship already exists, can't create */
 		fprintf(stderr, "%s: ship already exists, can't create\n", logprefix());
 		pb_queue_to_client(c, snis_opcode_pkt("bb", OPCODE_ADD_PLAYER_ERROR,
 				ADD_PLAYER_ERROR_SHIP_ALREADY_EXISTS));
 		write_queued_updates_to_client(c, 4, &no_write_count);
 		return -1;
 	}
-*/
 
 	/* FIXME: need to redesign this mess not to use a constant salt */
 	snis_crypt(bridgelist[c->bridge].shipname, bridgelist[c->bridge].password,
